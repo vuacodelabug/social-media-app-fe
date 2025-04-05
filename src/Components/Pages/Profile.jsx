@@ -165,7 +165,7 @@ export default function Profile() {
               </div>
               {/* Noi dung bai viet */}
               <p className="text-gray-800 mb-2">{post.content}</p>
-              <img src={post.image} alt="Post" className="w-full h-auto rounded-md" />
+              <img src={post.image} alt="Post" className="w-full h-96 rounded-md object-cover" />
               <div className="flex justify-around border-t border-gray-200 pt-2 text-gray-700">
                 <button className="flex items-center gap-1 hover:underline"><AiOutlineLike />Thích</button>
                 <button className="flex items-center gap-1 hover:underline"><FaRegComment />Bình luận</button>
