@@ -18,8 +18,15 @@ const Login = () => {
   const [user, setUser] = useState(null);
   console.log(login);
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
+
+    // chèn api t backend viết
+    // const response = await fetch('/api/auth/login', {
+    //     method: 'POST',
+    //     body: JSON.stringify({email, password})
+    // })
+      //
     // fake api
     const users = getUser(); // Lấy danh sách user từ fake API
     // Kiểm tra email và mật khẩu có khớp tt ng dung nhập không
