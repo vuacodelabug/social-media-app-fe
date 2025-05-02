@@ -11,7 +11,7 @@ const Pages = () => {
                 <Route path="/" element={<Home></Home>}></Route>
                 <Route path="/new-story" element={<NewStories></NewStories>}></Route>
                 <Route path="/profile" element={<ProFile></ProFile>}></Route>
-                <Route path="/log-in" element={<Login></Login>}></Route>
+                <Route path="/login" element={<Login></Login>}></Route>
                 <Route path="/profile" element={<ProFile></ProFile>}></Route>
             </Routes>
         </div> 
