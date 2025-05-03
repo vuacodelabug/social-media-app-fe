@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FaEdit, FaCamera } from "react-icons/fa";
+import { FaCamera } from "react-icons/fa";
 import { useParams } from "react-router-dom";
 import { getUserById } from "../fake_api/users";
 import { getPost } from "../fake_api/posts";
@@ -12,8 +12,6 @@ import { FaRegClock } from "react-icons/fa";
 import { PiCity } from "react-icons/pi";
 
 export default function Profile() {
-  const [bio, setBio] = useState("welcome to my profile");
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -28,13 +26,13 @@ export default function Profile() {
   const [coverPreview, setCoverPreview] = useState(null);
   const [profileFile, setProfileFile] = useState(null); // File ảnh
   const [profilePreview, setProfilePreview] = useState(null);
-  // CommentComment
+  // Comment
   const [openCommentId, setOpenCommentId] = useState(null);
 
   const toggleComment = (id) => {
     setOpenCommentId(openCommentId === id ? null : id);
   };
-  // Modal editedit
+  // Modal edit
   const handleOpenModal = () => {
     const userLS = {
       id: userProfile.id,
@@ -50,7 +48,7 @@ export default function Profile() {
     setCoverPreview(userLS.coverpic || null);
     setIsModalOpen(true);
   };
-
+  // Hinh
   const handleProfileChange = (e) => {
     const file = e.target.files[0];
     setProfileFile(file);
@@ -67,12 +65,12 @@ export default function Profile() {
       setCoverPreview(previewURL);
     }
   };
-  const [newBio] = useState(bio);
+
   // localStorage
   const userLogin = JSON.parse(localStorage.getItem("user")); // lay user dang đăng nhập
   const { id } = useParams(); // lay id user tu url
   const userProfile = getUserById(id); // tim user tuong ung voi id
-
+  // Hiện thành phố
   const details = [
     {
       icon: <PiCity className="w-4 h-4 text-gray-500" />,
@@ -82,7 +80,7 @@ export default function Profile() {
 
   const [userPosts, setUserPosts] = useState([]); //userPosts luu user sau khi da loc
   const [openMenuPostId, setOpenMenuPostId] = useState(null);
-
+  // xóa bài viết
   const togglePostMenu = (postId) => {
     setOpenMenuPostId(openMenuPostId === postId ? null : postId);
   };
@@ -90,9 +88,10 @@ export default function Profile() {
   const deletePost = (postId) => {
     // Xóa post khỏi danh sách post (giả lập)
     const updatedPosts = userPosts.filter((p) => p.id !== postId);
-    setUserPosts(updatedPosts); // bạn phải đảm bảo `setUserPosts` có sẵn nếu dùng useState
+    setUserPosts(updatedPosts);
     setOpenMenuPostId(null); // ẩn menu sau khi xóa
   };
+  // Like bai viet
   const [likes, setLikes] = useState(getLike()); // khởi tạo từ fake API getLike()
   const hasLiked = (postId) => {
     return likes.some(
@@ -125,7 +124,7 @@ export default function Profile() {
     // loc ra nhung bai viet co userId khop voi id tren url
     setUserPosts(filterPosts); // luu vao state
   }, [id]); // chay lai khi id tren url thay doi
-
+  // Follow
   const ProfileButton = ({ id }) => {
     const [isFollowing, setIsFollowing] = useState(false); // mac dinh chua follow
     const handleFollowClick = () => {
@@ -162,7 +161,6 @@ export default function Profile() {
   const handleModalClose = () => setIsModalOpen(false);
 
   const handleSave = () => {
-    setBio(newBio); // Lưu thông tin mới
     handleModalClose();
   };
 
@@ -189,18 +187,6 @@ export default function Profile() {
         />
         <h2 className="text-lg font-bold">{userProfile.name}</h2>
         <ProfileButton id={userProfile.id} />
-      </div>
-
-      {/* Bio Section */}
-      <div className="p-4 border-t">
-        <h3 className="font-semibold">Intro</h3>
-        <p className="text-sm text-gray-600 mt-1">{bio}</p>
-        <button
-          className="mt-2 text-blue-500 text-sm flex items-center"
-          onClick={() => setBio(prompt("Edit your bio", bio) || bio)}
-        >
-          <FaEdit className="mr-1" /> Edit Bio
-        </button>
       </div>
 
       {/* Details Section */}
@@ -285,42 +271,6 @@ export default function Profile() {
                 }
                 className="w-full p-2 border rounded-md"
                 placeholder="City"
-              />
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                className="w-full p-2 border rounded-md"
-                placeholder="Old Email"
-              />
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                className="w-full p-2 border rounded-md"
-                placeholder="New Email"
-              />
-              <input
-                type="password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                className="w-full p-2 border rounded-md"
-                placeholder="Old Password"
-              />
-              <input
-                type="password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                className="w-full p-2 border rounded-md"
-                placeholder="New Password"
               />
             </div>
 
