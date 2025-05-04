@@ -4,7 +4,6 @@ import { getUser, getUserById } from "../fake_api/users";
 import { getLike, setLike } from "../fake_api/like";
 import { getComments, addComment } from "../fake_api/comments";
 import NewPost from "./NewPost";
-
 import { FaRegClock, FaRegComment } from "react-icons/fa";
 import { AiOutlineLike } from "react-icons/ai";
 import { PiShareFatLight } from "react-icons/pi";
@@ -114,7 +113,6 @@ const PostsSection = () => {
             )}
 
             <div className="p-4 border-t">
-                <h2 className="font-semibold text-lg mb-4">Danh sách bài viết</h2>
                 {posts.length > 0 ? (
                     posts.map((post) => (
                         <div key={post.id} className="p-4 border rounded-lg shadow-sm mb-4 bg-white">
@@ -160,7 +158,7 @@ const PostsSection = () => {
                                 <img
                                     src={post.img}
                                     alt="Post"
-                                    className="w-full h-96 rounded-md object-cover"
+                                    className="rounded-md mx-auto max-w-full"
                                 />
                             )}
 
@@ -179,15 +177,18 @@ const PostsSection = () => {
                                         {hasLiked(post.id) ? "Đã thích" : "Thích"}
                                     </button>
                                 </div>
-
-                                <button
-                                    onClick={() => toggleComment(post.id)}
-                                    className="flex items-center gap-1 text-gray-600 hover:text-black"
-                                >
-                                    <FaRegComment />
-                                    Bình luận
-                                </button>
-
+                                <div className="flex flex-col items-center">
+                                    <p className="text-xs text-gray-500">
+                                        {post.comments?.length || 0} lượt bình luận
+                                    </p>
+                                    <button
+                                        onClick={() => toggleComment(post.id)}
+                                        className="flex items-center gap-1 text-gray-600 hover:text-black"
+                                    >
+                                        <FaRegComment />
+                                        Bình luận
+                                    </button>
+                                </div>
                                 <button className="flex items-center gap-1 hover:underline">
                                     <PiShareFatLight />
                                     Chia sẻ
