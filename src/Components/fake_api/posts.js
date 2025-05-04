@@ -12,14 +12,14 @@ const defaultPosts = [
     id_user: 1,
     description: "Hôm nay thật mệt",
     img: loopy,
-    created_at: new Date().toISOString(), // chuẩn TIMESTAMP
+    created_at:"2025-05-01",
   },
   {
     id: 2,
     id_user: 2,
     description: "Hôm nay thật hạnh phúc",
     img: linh,
-    created_at: new Date().toISOString(),
+    created_at: "2025-05-04",
   }
 ];
 

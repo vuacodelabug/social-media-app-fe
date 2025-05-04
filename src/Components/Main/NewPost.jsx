@@ -28,7 +28,7 @@ const NewPost = ({ user, onClose, onPostSuccess }) => {
             id_user: user.id,
             content: content,
             img: preview || "",
-            date: new Date().toLocaleDateString("vi-VN"),
+            created_at: new Date().toLocaleDateString("vi-VN"),
         };
 
         addNewPost(newPost);

@@ -126,7 +126,7 @@ const PostsSection = () => {
                                     <div>
                                         <h3 className="font-semibold text-sm">{post.username}</h3>
                                         <p className="flex gap-2 text-gray-400 text-xs">
-                                            <FaRegClock /> {post.created_at}
+                                            {post.created_at}
                                         </p>
                                     </div>
                                 </div>
