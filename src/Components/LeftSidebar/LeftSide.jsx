@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Avatar } from "@material-tailwind/react";
 import { getUser } from "../fake_api/users";
+import { Link } from "react-router-dom";
 
 const LeftSide = ( ) =>{
 
@@ -18,9 +19,15 @@ const LeftSide = ( ) =>{
         
                 {/* Danh sách menu */}
                 <ul className="space-y-4 text-gray-700">
-                    <li className="flex items-center gap-3 cursor-pointer hover:bg-gray-100 p-2 rounded-lg">
-                    🏠 <span>Trang chủ</span>
-                    </li>
+                    <Link
+                        to="/"
+                        className="block"
+                        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                    >
+                        <li className="flex items-center gap-3 cursor-pointer hover:bg-gray-100 p-2 rounded-lg">
+                            🏠 <span>Trang chủ</span>
+                        </li>
+                    </Link>
                     <li className="flex items-center gap-3 cursor-pointer hover:bg-gray-100 p-2 rounded-lg">
                     👤 <span>Trang cá nhân</span>
                     </li>

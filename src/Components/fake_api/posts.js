@@ -10,18 +10,16 @@ const defaultPosts = [
   {
     id: 1,
     id_user: 1,
-    content: "Hôm nay thật mệt",
+    description: "Hôm nay thật mệt",
     img: loopy,
-    avatar: avatar,
-    date: "04-04-2025",
+    created_at: new Date().toISOString(), // chuẩn TIMESTAMP
   },
   {
     id: 2,
     id_user: 2,
-    content: "Hôm nay thật hạnh phúc",
+    description: "Hôm nay thật hạnh phúc",
     img: linh,
-    avatar: linh,
-    date: "04-04-2025",
+    created_at: new Date().toISOString(),
   }
 ];
 

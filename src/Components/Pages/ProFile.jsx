@@ -166,6 +166,7 @@ export default function Profile() {
     handleModalClose();
   };
 
+
   return (
     <div className="w-full max-w-2xl mx-auto bg-white shadow-md rounded-lg overflow-hidden">
       {/* Cover Photo */}
