@@ -19,19 +19,17 @@ const NewStories = ({ onClose, user }) => {
     if (!image || !user) return;
 
     const now = new Date();
-    const created_at = now.toLocaleTimeString();
-    const expires_at = new Date(now.getTime() + 24 * 60 * 60 * 1000).toLocaleTimeString();
+    const created_at = now.toISOString();
+    const expires_at = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
 
     const newStory = {
-      id: user.id,
       id_user: user.id,
-      name: user.name,
       img: image,
       created_at,
       expires_at,
     };
 
-    addStory(newStory); // Lưu vào localStorage (sẽ chỉnh hàm này ở bước tiếp)
+    addStory(newStory);
     onClose();
   };
 
@@ -53,4 +51,5 @@ const NewStories = ({ onClose, user }) => {
       </div>
   );
 };
+
 export default NewStories;

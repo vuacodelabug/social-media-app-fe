@@ -9,7 +9,7 @@ const StoriesSection = ({ userLogin }) => {
   useEffect(() => {
     const data = getStories();
     setStories(data);
-  }, [isOpen]); // Cập nhật khi modal đóng
+  }, [isOpen]);
 
   return (
       <div className="my-4 w-full p-4 bg-white rounded-2xl shadow-md">
@@ -29,7 +29,7 @@ const StoriesSection = ({ userLogin }) => {
               <div key={index} className="flex-shrink-0 w-24 h-40 rounded-2xl relative cursor-pointer group">
                 <img src={story.img} className="w-full h-full object-cover rounded-2xl" alt="Story" />
                 <div className="absolute top-2 left-2 w-8 h-8 rounded-full border-2 border-white overflow-hidden">
-                  <img src={story.avatar || "/default-avatar.jpg"} className="w-full h-full object-cover" alt="Avatar" />
+                  <img src={story.avatar} className="w-full h-full object-cover" alt="Avatar" />
                 </div>
                 <div className="absolute bottom-2 left-2 right-2 text-xs text-white font-semibold truncate">{story.name}</div>
                 <div className="absolute inset-0 bg-black/20 rounded-2xl opacity-0 group-hover:opacity-100 transition"></div>

@@ -4,50 +4,60 @@ import linh from "../../assets/images/linh.jpg";
 
 const STORAGE_KEY = "stories";
 
+// Dữ liệu mẫu KHÔNG có name/avatar, chỉ có 4 thuộc tính theo bảng
 let stories = [
     {
         id: 1,
         id_user: 1,
-        name: "Kieu tien",
         img: avatar,
-        avatar: avatar,
-        created_at: "08:45",
-        expires_at: "12:10"
+        created_at: "2025-05-05T08:45:00",
+        expires_at: "2025-05-06T08:45:00"
     },
     {
         id: 2,
         id_user: 2,
-        name: "My linh",
         img: linh,
-        avatar: linh,
-        created_at: "08:45",
-        expires_at: "12:10"
+        created_at: "2025-05-05T09:00:00",
+        expires_at: "2025-05-06T09:00:00"
     }
 ];
 
-// 👉 Hàm lưu dữ liệu mẫu vào localStorage
 function saveStoriesToLocalStorage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stories));
 }
 
-// 👉 Gọi một lần duy nhất khi chưa có dữ liệu
 if (!localStorage.getItem(STORAGE_KEY)) {
     saveStoriesToLocalStorage();
 }
 
-// 👉 Lấy stories từ localStorage
+// Lấy từ localStorage và bổ sung name + avatar
 export const getStories = () => {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    return stored.map(story => {
+        const user = getUserById(story.id_user);
+        return {
+            ...story,
+            name: user?.name || "Unknown",
+            avatar: user?.profilepic || avatar
+        };
+    });
 };
 
-// 👉 Thêm một story mới và lưu lại
+// Thêm story mới
 export const addStory = (story) => {
     const existingStories = getStories();
-    const user = getUserById(story.id_user);
-    const storyWithAvatar = {
-        ...story,
-        avatar: user?.profilepic || avatar,
+    const { id_user, img, created_at, expires_at } = story;
+    const newId = existingStories.length > 0 ? Math.max(...existingStories.map(s => s.id)) + 1 : 1;
+
+    const baseStory = { id: newId, id_user, img, created_at, expires_at };
+
+    const user = getUserById(id_user);
+    const storyWithExtras = {
+        ...baseStory,
+        name: user?.name || "Unknown",
+        avatar: user?.profilepic || avatar
     };
-    const updatedStories = [...existingStories, storyWithAvatar];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedStories));
+
+    const updated = [...existingStories, storyWithExtras];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 };
