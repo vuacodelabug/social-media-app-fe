@@ -1,9 +1,9 @@
-import { Formik, Form } from "formik";
+import { Form, Formik } from "formik";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import LoginInput from "../loginInput";
-import { useState } from "react";
-import { getUser } from "../fake_api/users";
 import { postLogin } from "../utils/api";
+import { getUser } from "../utils/fake_api/users";
 
 const loginInfos = {
   email: "",
@@ -15,7 +15,6 @@ const Login = () => {
   const { email, password } = login;
   const [error, setError] = useState("");
   const [user, setUser] = useState(null);
-  console.log(login);
 
   const handleLoginSubmit = (e) => {
     e.preventDefault();
@@ -40,6 +39,8 @@ const Login = () => {
         coverpic: user.coverpic,
       };
       localStorage.setItem("user", JSON.stringify(userLS)); // luu userLS
+      const userLogin = JSON.parse(localStorage.getItem("user"));
+      console.log("userLogin:",userLogin);
       window.location.href = "/"; // chuyển hướng trang
     } else {
       console.log("Invalid credentials");

@@ -1,10 +1,10 @@
-import "./style.css";
-import { Formik, Form } from "formik";
+import { Form, Formik } from "formik";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import LoginInput from "../../loginInput";
-import { useState } from "react";
-import { getUser } from "../../fake_api/users";
+import { getUser } from "../../unit/fake_api/users";
 import { postLogin } from "../../utils/api";
+import "./style.css";
 
 const loginInfos = {
   email: "",

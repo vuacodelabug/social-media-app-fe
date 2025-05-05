@@ -1,34 +1,57 @@
-import React from 'react'
-import { useState } from "react";
-import { Avatar } from "@material-tailwind/react";
-import { getUser } from "../fake_api/users";
-import { Link } from 'react-router-dom'; // Import Link từ react-router-dom
+import React, { useState } from "react";
+import { getUser } from "../utils/fake_api/users";
+
+import LeftSide from "../LeftSidebar/LeftSide";
+import PostsSection from "../Main/PostsSection";
+import StoriesSection from "../Main/StoriesSection";
+import Navbar from "../Navbar/Navbar";
+import RightSide from "../RightSidebar/RightSide";
+
+
 
 const Home = () => {
-    const userData = JSON.parse(localStorage.getItem("user")); // lay thong tin user tu localStorage
-    const [user, setUser] = useState(userData); // luu user vao state
-    const userList = getUser(); // goi getUser fake api tu user.js
-    return (
-        <div>
-            <Avatar src={user.profilepic} alt="avatar" />  
-            {/* user.profilepic. user duoc lay tu state */}
-            <h1>Xin chào {user.name} đến với Friendzy </h1>
-            <h2>Danh sách bạn bè:</h2>
-      <ul>
-        {userList.map((userItem) => ( 
-          // userItem se duyet qua tưng ten co trong userList
-          <li key={userItem.id}>
-            {/* Sử dụng Link để chuyển hướng tới trang profile của người dùng */}
-            <Link to={`/profile/${userItem.id}`}>
-            <Avatar src={userItem.profilepic} alt="avatar" />
-              {userItem.name}
-            </Link>
-          </li>
-        ))}
-      </ul>
+  const userData = JSON.parse(localStorage.getItem("user")); // lay thong tin user tu localStorage
+  const userLogin = JSON.parse(localStorage.getItem("user"));
+  console.log("userLogin:", userLogin);
+
+  // không có user thì chuyển hướng về trang login
+  if (!userData) {
+    window.location.href = "/login";
+  }
+
+  const [user, setUser] = useState(userData); // luu user vao state
+  const userList = getUser(); // goi getUser fake api tu user.js
+  return (
+    <div>
+      
+      {/* Navbar cố định */}
+      <div className="fixed top-0 left-0 right-0 z-10 bg-white shadow">
+        <Navbar />
+      </div>
+
+      {/* Wrapper có padding-top để tránh bị Navbar đè */}
+      <div className="pt-[64px] flex">
+        {/* LeftSide */}
+        <div className="fixed top-[64px] left-0 w-[20%] bg-gray-100 overflow-y-auto">
+          <LeftSide />
         </div>
 
-    )
-}
+        {/* RightSide */}
+        <div className="fixed top-[64px] right-0 w-[20%] bg-gray-100 overflow-y-auto">
+          <RightSide userLogin={userLogin} />
+        </div>
 
-export default Home
+        {/* Main content */}
+        <div className="absolute left-[20%] w-[60%]">
+          <div className="w-[80%] mx-auto">
+         
+            <StoriesSection userLogin={userLogin} />
+            <PostsSection />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Home;

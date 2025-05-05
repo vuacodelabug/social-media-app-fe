@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate từ react-router-dom
-import { getUserByEmail } from "../fake_api/users"; // Import hàm lấy thông tin người dùng
+import { getUserByEmail } from "../utils/fake_api/users"; // Import hàm lấy thông tin người dùng
 
 const Forgot = () => {
   const [email, setEmail] = useState(""); // Để lưu trữ giá trị của email

@@ -1,3 +1,6 @@
+
+const LIKE_KEY = "likes";
+
 export const getLike = () => {
   return [
     {
@@ -11,4 +14,8 @@ export const getLike = () => {
       id_post: 1,
     },
   ];
+};
+
+export const setLike = (likes) => {
+  localStorage.setItem(LIKE_KEY, JSON.stringify(likes));
 };
