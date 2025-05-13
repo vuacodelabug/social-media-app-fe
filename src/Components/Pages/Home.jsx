@@ -1,26 +1,26 @@
-import React, { useState } from "react";
-import { getUser } from "../utils/fake_api/users";
+import React, { useEffect } from "react";
 
 import LeftSide from "../LeftSidebar/LeftSide";
 import PostsSection from "../Main/PostsSection";
 import StoriesSection from "../Main/StoriesSection";
 import Navbar from "../Navbar/Navbar";
 import RightSide from "../RightSidebar/RightSide";
+import * as api from "../utils/api";
 
 
 
 const Home = () => {
-  const userData = JSON.parse(localStorage.getItem("user")); // lay thong tin user tu localStorage
   const userLogin = JSON.parse(localStorage.getItem("user"));
-  console.log("userLogin:", userLogin);
+  
+  useEffect(()=>{
+      // không có user thì chuyển hướng về trang login
+    const userLogin = JSON.parse(localStorage.getItem("user"));
+    if (!userLogin) {
+      window.location.href = "/login";
+    }
+    api.isLogin();
+  })
 
-  // không có user thì chuyển hướng về trang login
-  if (!userData) {
-    window.location.href = "/login";
-  }
-
-  const [user, setUser] = useState(userData); // luu user vao state
-  const userList = getUser(); // goi getUser fake api tu user.js
   return (
     <div>
       

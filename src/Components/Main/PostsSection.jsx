@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { addComment, getComments } from "../utils/fake_api/comments";
-import { getLike, setLike } from "../utils/fake_api/like";
-import { deletePost, getPost } from "../utils/fake_api/posts";
-import { getUser, getUserById } from "../utils/fake_api/users";
+import * as api from "../utils/api";
+
+// import { addComment } from "../utils/fake_api/comments";
+// import { getLike, setLike } from "../utils/fake_api/like";
+// import { deletePost } from "../utils/fake_api/posts";
+// import { getUser } from "../utils/fake_api/users";
+
 import NewPost from "./NewPost";
 
 import { AiOutlineLike } from "react-icons/ai";
@@ -10,14 +13,14 @@ import { FaRegClock, FaRegComment } from "react-icons/fa";
 import { PiShareFatLight } from "react-icons/pi";
 
 import { Avatar } from "@material-tailwind/react";
+import dayjs from "dayjs";
 import { FaPhotoVideo, FaSmile, FaVideo } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
-const PostsSection = () => {
+const PostsSection = ({ isUserProfile = false, idUser = 0 }) => {
   const [posts, setPosts] = useState([]);
   const [userLogin, setUserLogin] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [likes, setLikes] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [openMenuPostId, setOpenMenuPostId] = useState(null);
   const [openCommentId, setOpenCommentId] = useState(null);
@@ -25,52 +28,69 @@ const PostsSection = () => {
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     setUserLogin(storedUser || null);
-  }, []);
-
-  useEffect(() => {
     refreshPosts();
   }, []);
 
-  const refreshPosts = () => {
-    const allUsers = getUser();
-    const allPosts = getPost();
-    const updatedPosts = allPosts.map((post) => {
-      const user = allUsers.find((u) => u.id === post.id_user);
-      return {
-        ...post,
-        avatar: user?.profilepic || "/default-avatar.jpg",
-        username: user?.name || "Ẩn danh",
-        comments: getComments().filter((c) => c.id_post === post.id)
-      };
-    });
+  // lấy danh sách bài viết
+  const refreshPosts = async () => {
+    const response = await (isUserProfile ? api.getUserPosts(idUser) : api.getPosts());
+    const postList = response.data;
+    const updatedPosts = await Promise.all(
+      postList.map(async (post) => {
+        const commentsResponse = await api.getComments(post.id);
+
+        const likeResponse = await api.getLikes(post.id);
+        return {
+          ...post,
+          comments: commentsResponse.data,
+          likes: likeResponse.data,
+        };
+      })
+    );
     setPosts(updatedPosts);
   };
 
-  useEffect(() => {
-    const storedLikes = getLike();
-    setLikes(storedLikes);
-  }, []);
-
   const hasLiked = (postId) => {
-    return likes.some(
-      (like) => like.id_post === postId && like.id_user === userLogin.id
-    );
+    return posts.find(p => p.id === postId)?.likes.some(like => like.id_user === userLogin.id);
   };
 
-  const handleLike = (postId) => {
-    const updatedLikes = hasLiked(postId)
-      ? likes.filter(
-          (like) => !(like.id_post === postId && like.id_user === userLogin.id)
-        )
-      : [...likes, { id: Date.now(), id_user: userLogin.id, id_post: postId }];
-    setLikes(updatedLikes);
-    setLike(updatedLikes);
+  const handleLike = async (postId) => {
+    const likeData = { id_user: userLogin.id, id_post: postId };
+    try {
+      if (hasLiked(postId)) {
+        await api.deleteLike(likeData);
+      } else {
+        await api.postAddLike(likeData);
+      }
+      await refreshPosts();
+    } catch (error) {
+      console.error("Lỗi khi xử lý like:", error);
+    }
+  };
+  
+ // Hàm thêm comment
+ const handleAddComment = async (postId) => {
+  if (newComment.trim() === "") return;
+
+  const comment = {
+    id_post: postId,
+    id_user: userLogin.id,
+    description: newComment,
+    created_at: new Date().toISOString(),
   };
 
+  try {
+    await api.postAddComment(comment);
+    setNewComment("");
+    await refreshPosts();
+  } catch (error) {
+    console.error("Lỗi khi thêm comment:", error);
+  }
+};
   // Hàm xóa comment
   const handleDeleteComment = async (commentId) => {
     try {
-      //   await deleteCommentAPI(commentId); // gọi API xoá comment
+      await api.deleteComment(commentId); // Uncomment if implemented
       // cập nhật ui sau khi xoá
       setPosts((prevPosts) =>
         prevPosts.map((post) => {
@@ -90,27 +110,6 @@ const PostsSection = () => {
     }
   };
 
-  // Hàm thêm comment
-  const handleAddComment = (postId) => {
-    if (newComment.trim() === "") return;
-    const comment = {
-      id: Date.now(),
-      id_post: postId,
-      id_user: userLogin.id,
-      description: newComment,
-      created_at: new Date().toLocaleDateString()
-    };
-    addComment(comment);
-    setNewComment("");
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === postId
-          ? { ...post, comments: [...(post.comments || []), comment] }
-          : post
-      )
-    );
-  };
-
   // mở menu bài viết
   const togglePostMenu = (postId) => {
     setOpenMenuPostId(openMenuPostId === postId ? null : postId);
@@ -128,10 +127,11 @@ const PostsSection = () => {
   return (
     <div className="flex flex-col gap-4 p-4 w-full bg-white rounded-2xl shadow-md">
       {/* post bài viết */}
-      <div className="bg-white rounded-lg shadow p-4">
+      {  ((isUserProfile && userLogin.id === idUser) || isUserProfile === false) && (
+        <div className="bg-white rounded-lg shadow p-4 border-2">
         {/* Top input */}
         <div className="flex items-center space-x-3">
-          <Avatar src={userLogin.profilepic} size="sm" />
+          <Avatar src={userLogin.profilepic || "/images/avatar/avatar-0.png"} size="sm" className="border-2" />
           <input
             onClick={() => setIsModalOpen(true)}
             type="text"
@@ -165,6 +165,7 @@ const PostsSection = () => {
           </button>
         </div>
       </div>
+      )}
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
@@ -190,21 +191,26 @@ const PostsSection = () => {
               className="p-4 border rounded-lg shadow-sm mb-4 bg-white"
             >
               <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center">
+
+                {/* Avatar and user info */}
+
+                <div className="flex items-center ">
                   <Link to={`/profile/${post.id_user}`} className="flex items-center">
                     <img
-                      src={post.avatar}
+                      src={post.profilepic || "/images/avatar/avatar-0.png"}
                       alt="Avatar"
-                      className="w-10 h-10 rounded-full mr-3"
+                      className="w-10 h-10 rounded-full mr-3 border-2"
                     />
-                    <div>
-                      <h3 className="font-semibold text-sm">{post.username}</h3>
-                      <p className="flex gap-2 text-gray-400 text-xs">
-                        <FaRegClock /> {post.created_at}
+                    <div className="flex flex-col">
+                      <h3 className="font-semibold text-sm capitalize">{post.name}</h3>
+                      <p className="flex gap-2 text-gray-400 text-xs items-center">
+                        <FaRegClock />
+                        {dayjs(post.created_at).format("DD/MM/YYYY HH:mm")}
                       </p>
                     </div>
                   </Link>
                 </div>
+                
                 <div className="relative">
                   <button
                     onClick={() => togglePostMenu(post.id)}
@@ -216,7 +222,7 @@ const PostsSection = () => {
                     <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow-md z-10">
                       <button
                         onClick={() => {
-                          deletePost(post.id);
+                          // deletePost(post.id);
                           refreshPosts();
                         }}
                         className="block w-full text-left px-4 py-2 text-sm hover:bg-red-100 text-red-600"
@@ -228,7 +234,7 @@ const PostsSection = () => {
                 </div>
               </div>
 
-              <p className="text-gray-800 mb-2">{post.content}</p>
+              <p className="text-gray-800 mb-2">{post.description}</p>
               {post.img && (
                 <img
                   src={post.img}
@@ -241,13 +247,13 @@ const PostsSection = () => {
                 {/* Like summary */}
                 <div className="flex items-center gap-1">
                   <span>
-                    {likes.filter((l) => l.id_post === post.id).length} lượt
+                    {post.likes.length} lượt
                     thích
                   </span>
                 </div>
 
                 {/* Comment and share details */}
-                <div className="flex gap-4 text-xs text-gray-500">
+                <div className="flex gap-4 text-sm text-gray-500">
                   <span>{post.comments.length} bình luận</span>
                   <span>5 lượt chia sẻ</span>{" "}
                   {/* Hardcoded hoặc sau này làm thật */}
@@ -302,55 +308,45 @@ const PostsSection = () => {
                   <div className="mt-4">
                     {post.comments &&
                       post.comments.map((comment) => {
-                        const userProfile = getUserById(comment.id_user);
                         const isOwnComment = comment.id_user === userLogin?.id;
-
                         return (
                           <div
                             key={comment.id}
-                            className="flex items-start gap-2 mt-2 text-sm relative"
+                            className="flex items-start gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-all shadow-sm"
                           >
                             {/* Avatar */}
-                            <Link
-                              to={`/profile/${comment.id_user}`}
-                              className="flex-shrink-0"
-                            >
+                            <Link to={`/profile/${comment.id_user}`} className="flex-shrink-0">
                               <img
-                                src={
-                                  userProfile?.profilepic ||
-                                  "/default-avatar.jpg"
-                                }
+                                src={comment.profilepic || "/images/avatar/avatar-0.png"}
                                 alt="avatar"
-                                className="w-8 h-8 rounded-full"
+                                className="w-10 h-10 rounded-full border-gray-300 object-cover border-2"
                               />
                             </Link>
-
-                            {/* Nội dung */}
-                            <div className="flex-1 pr-10">
-                              {" "}
-                              {/* tránh đè lên nút xoá */}
-                              <Link to={`/profile/${comment.id_user}`}>
-                                <p className="font-semibold text-gray-800 hover:underline">
-                                  {userProfile?.name || "Ẩn danh"}
+                        
+                            {/* Nội dung comment */}
+                            <div className="flex-1">
+                              {/* Tên người dùng */}
+                              <Link to={`/profile/${comment.id_user}`} className="block">
+                                <p className="font-semibold text-gray-800 hover:underline capitalize leading-tight">
+                                  {comment.name || "Ẩn danh"}
                                 </p>
                               </Link>
-                              <p className="text-gray-700">
-                                {comment.description}
-                              </p>
-                              
-                              {/* Thời gian + nút xoá ở dưới cùng */}
-                              <div className="flex justify-between items-center mt-1">
-                                <span className="text-xs text-gray-400">
-                                  {comment.created_at}
-                                </span>
+                        
+                              {/* Nội dung */}
+                              <p className="text-gray-700 mt-1 break-words">{comment.description}</p>
+                        
+                              {/* Thời gian + Xoá */}
+                              <div className="flex justify-between items-center mt-2 text-xs text-gray-400">
+                              <span className="flex-shrink-0 bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs">
+                                {dayjs(comment.created_at).format("DD/MM/YYYY HH:mm")}
+                              </span>
+
                                 {isOwnComment && (
                                   <button
-                                    onClick={() =>
-                                      handleDeleteComment(comment.id)
-                                    }
-                                    className="text-red-500 text-xs hover:underline"
-                                    >
-                                      Xoá
+                                    onClick={() => handleDeleteComment(comment.id)}
+                                    className="text-red-500 bg-gray-200 hover:underline transition px-2 py-0.5 rounded-full text-xs"
+                                  >
+                                    Xoá
                                   </button>
                                 )}
                               </div>

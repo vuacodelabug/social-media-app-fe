@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import LoginInput from "../loginInput";
 import { postLogin } from "../utils/api";
-import { getUser } from "../utils/fake_api/users";
 
 const loginInfos = {
   email: "",
@@ -14,39 +13,36 @@ const Login = () => {
   const [login, setLogin] = useState(loginInfos);
   const { email, password } = login;
   const [error, setError] = useState("");
-  const [user, setUser] = useState(null);
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    // fake api
-    const users = getUser(); // Lấy danh sách user từ fake API
-    // Kiểm tra email và mật khẩu có khớp tt ng dung nhập không
-    const user = users.find(
-      // tìm kiem user người dùng nhập khớp thì trả về đối tượng
-      (u) => u.email === email && u.password === password
-    );
-
-    postLogin(login);
-
-    if (user) {
-      console.log("Login successful!", user);
-      setError(""); // Xóa thông báo lỗi nếu đăng nhập thành công
-      // Luu vao localStorage
-      const userLS = {
-        id: user.id,
-        name: user.name,
-        profilepic: user.profilepic,
-        coverpic: user.coverpic,
-      };
-      localStorage.setItem("user", JSON.stringify(userLS)); // luu userLS
-      const userLogin = JSON.parse(localStorage.getItem("user"));
-      console.log("userLogin:",userLogin);
-      window.location.href = "/"; // chuyển hướng trang
-    } else {
-      console.log("Invalid credentials");
-      setError("Invalid email or password");
+    // Gọi API để thực hiện đăng nhập
+    try {
+      const response = await postLogin(login); 
+      if (response && response.data ) {
+        // Đăng nhập thành công
+        console.log("Login successful!", response.data);
+        setError(""); 
+        // Lưu vào localStorage
+        const userLogin = {
+          id: response.data.id,
+          name: response.data.name,
+          profilepic: response.data.profilepic || "/images/avatar/avatar-0.png",
+          coverpic: response.data.coverpic,
+        };
+        localStorage.setItem("user", JSON.stringify(userLogin)); 
+        window.location.href = "/"; // Chuyển hướng đến trang chính sau khi đăng nhập thành công
+      } else {
+        console.log("Invalid credentials");
+        setError("Invalid email or password");
+      }
+    } catch (error) {
+      // Xử lý lỗi khi gọi API
+      console.log("Login failed:", error.response.data);
+      setError(error.response.data.message);
     }
   };
+  
 
   const handleLoginChange = (e) => {
     const { name, value } = e.target;

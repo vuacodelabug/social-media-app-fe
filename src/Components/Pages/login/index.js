@@ -15,7 +15,6 @@ export default function Login() {
   const { email, password } = login;
   const [error, setError] = useState("");
   const [user, setUser] = useState(null);
-  console.log(login);
 
   const handleLoginSubmit = (e) => {
     e.preventDefault();

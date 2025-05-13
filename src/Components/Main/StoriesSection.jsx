@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { getStories } from "../utils/fake_api/stories";
+// import { getStories } from "../utils/fake_api/stories";
+import { getStories } from "../utils/api";
 import NewStories from "./NewStories";
 
 const StoriesSection = ({ userLogin }) => {
@@ -8,9 +9,17 @@ const StoriesSection = ({ userLogin }) => {
   const [viewStory, setViewStory] = useState(null);
 
   useEffect(() => {
-    const data = getStories();
-    setStories(data);
-  }, [isOpen]); // Cập nhật khi modal đóng
+    const fetchStories = async () => {
+      try {
+        const response = await getStories();
+        setStories(response.data);
+      } catch (error) {
+        console.error("Lỗi khi lấy stories:", error);
+      }
+    };
+  
+    fetchStories();
+  }, [isOpen]);
 
   // Xử lý khi người dùng nhấp vào story
   const handleViewStory = (story) => {
@@ -42,14 +51,14 @@ const StoriesSection = ({ userLogin }) => {
               className="w-full h-full object-cover rounded-2xl"
               alt="Story"
             />
-            <div className="absolute top-2 left-2 w-8 h-8 rounded-full border-2 border-white overflow-hidden">
+            <div className="absolute top-2 left-2 w-8 h-8 rounded-full border-white overflow-hidden">
               <img
-                src={story.user?.profilepic || "/default-avatar.jpg"}
-                className="w-full h-full object-cover"
+                src={story.profilepic || "/images/avatar/avatar-0.png"}
+                className="w-full h-full object-cover border-2"
                 alt="Avatar"
               />
             </div>
-            <div className="absolute bottom-2 left-2 right-2 text-xs text-white font-semibold truncate">
+            <div className="absolute bottom-2 left-2 right-2 text-xs text-white font-semibold truncate capitalize">
               {story.name}
             </div>
             <div className="absolute inset-0 bg-black/20 rounded-2xl opacity-0 group-hover:opacity-100 transition"></div>
@@ -80,11 +89,11 @@ const StoriesSection = ({ userLogin }) => {
             <div className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <img
-                  src={viewStory.user?.profilepic || "/default-avatar.jpg"}
+                  src={viewStory.profilepic || "/images/avatar/avatar-0.png"}
                   alt="Avatar"
-                  className="w-8 h-8 rounded-full"
+                  className="w-8 h-8 rounded-full border-2"
                 />
-                <span className="font-semibold text-sm">{viewStory.name}</span>
+                <span className="font-semibold text-sm capitalize">{viewStory.name}</span>
               </div>
             </div>
           </div>

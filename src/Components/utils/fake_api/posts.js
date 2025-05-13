@@ -50,7 +50,7 @@ export const addNewPost = (post) => {
   const user = getUserById(post.id_user);
   const postWithAvatar = {
     ...post,
-    avatar: user?.profilepic || "/images/default-avatar.png", // Đường dẫn đến ảnh đại diện mặc định
+    avatar: user?.profilepic || "../../assets/images/avatar-0.png", // Đường dẫn đến ảnh đại diện mặc định
   };
 
   const updatedPosts = [postWithAvatar, ...currentPosts];

@@ -13,7 +13,7 @@ export const getUser = () => {
       city: "New York",
     },
     {
-      id: 2,
+      id: 4,
       username: "khuong",
       email: "khuong@example.com",
       password: "123456",

@@ -1,69 +1,64 @@
 import { Avatar } from "@material-tailwind/react";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  addRelationship,
-  getRelationships,
-  removeRelationship,
-} from "../utils/fake_api/relationships";
-import { getUser } from "../utils/fake_api/users";
+import * as api from "../utils/api"; // API thật
 
 const RightSide = ({ userLogin }) => {
   const [user, setUser] = useState(null);
-  const [followers, setFollowers] = useState([]);
   const [followings, setFollowings] = useState([]);
-  const [usersData, setUsersData] = useState([]);
+  const [followers, setFollowers] = useState([]);
 
-  // Load user data và user đăng nhập
   useEffect(() => {
-    const data = getUser();
-    setUsersData(data);
-
-    const storedUser = localStorage.getItem("user");
-    const parsedUser = storedUser ? JSON.parse(storedUser) : null;
-    setUser(userLogin || parsedUser);
+    const storedUser = userLogin || JSON.parse(localStorage.getItem("user"));
+    if (storedUser) {
+      setUser(storedUser);
+    }
   }, [userLogin]);
 
-  // Gọi khi user hoặc usersData đã có dữ liệu
   useEffect(() => {
-    if (user && usersData.length > 0) {
-      updateRelationships();
+    if (user) {
+      fetchFollowings();
+      fetchFollowers();
     }
-  }, [user, usersData]);
+  }, [user]);
 
-  // Cập nhật danh sách follower/following
-  const updateRelationships = () => {
-    if (!user || !user.id) return;
-
-    const rels = getRelationships();
-    localStorage.setItem("relationships", JSON.stringify(rels));
-
-    const currentFollowers = rels
-      .filter((r) => r.iduser_following === user.id)
-      .map((r) => usersData.find((u) => u.id === r.iduser_follower))
-      .filter(Boolean); // lọc undefined nếu user không tìm thấy
-
-    const currentFollowings = rels
-      .filter((r) => r.iduser_follower === user.id)
-      .map((r) => usersData.find((u) => u.id === r.iduser_following))
-      .filter(Boolean);
-
-    setFollowers(currentFollowers);
-    setFollowings(currentFollowings);
+  const fetchFollowings = async () => {
+    try {
+      const res = await api.getFollowings(user.id); // API thật
+      setFollowings(res.data);
+    } catch (error) {
+      console.error("Failed to fetch followings", error);
+    }
+  };
+  const fetchFollowers = async () => {
+    try {
+      const res = await api.getFollowers(user.id); // API thật
+      setFollowers(res.data);
+    } catch (error) {
+      console.error("Failed to fetch followers", error);
+    }
   };
 
-  const handleFollow = (targetId) => {
-    if (!user || user.id === targetId) return;
+  const handleUnfollow = async (targetId) => {
+    try {
+      // hỏi người dùng có chắc chắn không
+      const confirmUnfollow = window.confirm("Bạn có chắc chắn muốn bỏ theo dõi không?");
+      if (!confirmUnfollow) return;
 
-    addRelationship(user.id, targetId);
-    updateRelationships();
+      await api.unfollowUser(user.id, targetId); // API thật
+      fetchFollowings(); // Refresh
+    } catch (error) {
+      console.error("Failed to unfollow", error);
+    }
   };
 
-  const handleUnfollow = (targetId) => {
-    if (!user || user.id === targetId) return;
-
-    removeRelationship(user.id, targetId);
-    updateRelationships();
+  const handleFollow = async (targetId) => {
+    try {
+      await api.followUser(user.id, targetId); // API thật
+      fetchFollowings(); // Refresh
+    } catch (error) {
+      console.error("Failed to follow", error);
+    }
   };
 
   return (
@@ -71,28 +66,53 @@ const RightSide = ({ userLogin }) => {
       <div className="flex-1 overflow-y-auto px-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         <div className="mt-4">
           <p className="font-roboto font-medium text-sm text-gray-700">
-            Following: {user ? followings.length : 0}
+            Following: {followings.length}
           </p>
           {followings.map((following) => (
-            <div
-              key={following.id}
-              className="flex items-center justify-between my-2"
-            >
-            <Link to={`/profile/${following.id}`}>
-              <div className="flex items-center space-x-2">
-                <Avatar size="sm" src={following.profilepic} />
-                <p className="text-sm">{following.name}</p>
-              </div>
+            <div key={following.id} className="flex items-center justify-between my-2">
+              <Link to={`/profile/${following.iduser_following}`}>
+                <div className="flex items-center space-x-2">
+                  <Avatar size="sm" src={following.profilepic || "/images/avatar/avatar-0.png"} className="border-2" />
+                  <p className="text-sm capitalize">{following.name}</p>
+                </div>
               </Link>
               <button
-                onClick={() => handleUnfollow(following.id)}
+                onClick={() => handleUnfollow(following.iduser_following)}
                 className="px-2 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300"
               >
                 Unfollow
               </button>
             </div>
-           
           ))}
+        </div>
+
+        {/* Follower */}
+        <div className="mt-4">
+          <p className="font-roboto font-medium text-sm text-gray-700">
+            Follower: {followers.length}
+          </p>
+          {followers.map((follower) => {
+              const isFollowing = followings.some(f => f.iduser_following === follower.iduser_follower);
+      
+            return (
+            <div key={follower.id} className="flex items-center justify-between my-2">
+              <Link to={`/profile/${follower.iduser_follower}`}>
+                <div className="flex items-center space-x-2">
+                  <Avatar size="sm" src={follower.profilepic || "/images/avatar/avatar-0.png"} className="border-2" />
+                  <p className="text-sm capitalize">{follower.name}</p>
+                </div>
+              </Link>
+               {/* Chỉ hiện nếu user không follow follower này */}
+                {!isFollowing && (
+                  <button
+                    onClick={() => handleFollow(follower.iduser_follower)}
+                    className="px-2 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300"
+                  >
+                    Following
+                  </button>
+                )}
+            </div>
+          )})}
         </div>
       </div>
     </div>
