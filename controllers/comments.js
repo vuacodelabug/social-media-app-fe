@@ -1,4 +1,5 @@
 import db from "../connect.js";
+import jwt from "jsonwebtoken";
 
 // lấy danh sách bình luận của một bài viết
 export const getComments = (req, res) => {
@@ -26,12 +27,27 @@ export const postAddComment = (req, res) => {
 
 // xóa bình luận của một bài viết
 export const deleteComment = (req, res) => {
-  const q = `DELETE FROM comments WHERE id_user = $1 AND id_post = $2`;
-  
-  const values = [req.body.id_user, req.body.id_post];
+  const token = req.cookies.access_token;  
+  if (!token) return res.status(401).json("Unauthorized");
 
-  db.query(q, values, (err, data) => {
-    if (err) return res.status(500).json(err);
-    return res.status(200).json("Comment has been deleted");
+  jwt.verify(token, process.env.SECRET_KEY, (err, userInfo) => {
+    if (err) return res.status(403).json("Token is not valid");
+
+    const q = `
+      DELETE FROM comments
+      WHERE id = $1 AND id_user = $2
+    `;
+
+    const values = [req.params.id, userInfo.id]; // id = id comment
+
+    db.query(q, values, (err, data) => {
+      if (err) return res.status(500).json(err);
+
+      if (data.rowCount === 0) {
+        return res.status(403).json("Bạn không có quyền xoá comment này hoặc comment không tồn tại.");
+      }
+
+      return res.status(200).json("Comment has been deleted");
+    });
   });
 };

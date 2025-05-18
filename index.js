@@ -72,7 +72,8 @@ app.use((req, res, next) => {
 
 const originalQuery = db.query;
 db.query = (...args) => {
-  console.log("db.query called with:", args[0], args[1]);
+  console.log(" [DB] Query:");
+  console.log("        " ,args[0], args[1]);
   return originalQuery.apply(db, args);
 };
 
