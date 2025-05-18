@@ -2,6 +2,26 @@ import axios from "axios";
 
 const API_ROOT = "http://localhost:8800";
 
+export const Register = async (formData) => {
+  return await fetch(`${API_ROOT}/api/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(formData)
+  });
+};
+
+export const search = async (query) => {
+  return await fetch(`${API_ROOT}/api/posts/search-form?q=${encodeURIComponent(query)}`);
+};
+
+export const verifyEmail = async (email) => {
+  return await fetch(`${API_ROOT}/api/auth/verify-email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email })
+  });
+};
+
 // login 
 export function postLogin(userInfo) {
   return axios.post(`${API_ROOT}/api/auth/login`, userInfo, {
@@ -123,5 +143,12 @@ export const followUser = (userId, targetId) =>
     iduser_follower: userId,
     iduser_following: targetId,
   }, {
+    withCredentials: true,
+  });
+  
+// GET /api/relationships/check?follower=1&following=2
+export const checkFollow = (userId, targetId) =>
+  axios.get(`${API_ROOT}/api/relationships/check`, {
+    params: { follower: userId, following: targetId },
     withCredentials: true,
   });

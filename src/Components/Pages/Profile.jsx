@@ -5,7 +5,15 @@ import { useParams } from "react-router-dom";
 import LeftSide from "../LeftSidebar/LeftSide";
 import PostsSection from "../Main/PostsSection";
 import Navbar from "../Navbar/Navbar";
-import { getUserById, isLogin, uploadImage, updateUser } from "../utils/api";
+import {
+  getUserById,
+  isLogin,
+  uploadImage,
+  updateUser,
+  followUser,
+  unfollowUser,
+  checkFollow,
+} from "../utils/api";
 
 export default function Profile() {
   const [userProfile, setUserProfile] = useState(null);
@@ -15,13 +23,15 @@ export default function Profile() {
     email: "",
     city: "",
     profilepic: "",
-    coverpic: ""
+    coverpic: "",
   });
   const [coverFile, setCoverFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState(null);
   const [profileFile, setProfileFile] = useState(null);
   const [profilePreview, setProfilePreview] = useState(null);
   const [userLogin, setUserLogin] = useState(null); // Đảm bảo khai báo state đúng nơi
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const { id } = useParams();
 
@@ -39,8 +49,11 @@ export default function Profile() {
         try {
           const res = await getUserById(id);
           setUserProfile(res.data);
+
+          const result = await checkFollow(userLogin.id, id);
+          setIsFollowing(result.data.following);
         } catch (error) {
-          console.error("Lỗi khi lấy user:", error);
+          console.error("Lỗi: ", error);
         }
       };
       fetchUser();
@@ -52,8 +65,9 @@ export default function Profile() {
       name: userProfile?.name || "",
       email: userProfile?.email || "",
       city: userProfile?.city || "",
+      website: userProfile?.website || "",
       profilepic: userProfile?.profilepic || "",
-      coverpic: userProfile?.coverpic || ""
+      coverpic: userProfile?.coverpic || "",
     });
     setProfilePreview(userProfile?.profilepic || "");
     setCoverPreview(userProfile?.coverpic || "");
@@ -97,7 +111,7 @@ export default function Profile() {
       const updatedUser = {
         ...formData,
         profilepic: profileUrl || formData.profilepic,
-        coverpic: coverUrl || formData.coverpic
+        coverpic: coverUrl || formData.coverpic,
       };
 
       await updateUser(userProfile.id, updatedUser);
@@ -114,7 +128,7 @@ export default function Profile() {
   };
 
   const ProfileButton = ({ id }) => {
-    const [isFollowing, setIsFollowing] = useState(false);
+    console.log("isFollowing: ", isFollowing);
 
     if (id === userLogin?.id) {
       return (
@@ -128,14 +142,32 @@ export default function Profile() {
     } else {
       return (
         <button
-          onClick={() => setIsFollowing((prev) => !prev)}
+          onClick={handleToggleFollow}
+          disabled={loading}
           className={`mt-2 px-4 py-1 rounded-md text-sm ${
-            isFollowing ? "bg-green-600" : "bg-blue-500 text-white"
+            isFollowing ? "bg-green-600 text-white" : "bg-blue-500 text-white"
           }`}
         >
-          {isFollowing ? "Following" : "Follow"}
+          {loading ? "Đang xử lý..." : isFollowing ? "Following" : "Follow"}
         </button>
       );
+    }
+  };
+
+  const handleToggleFollow = async () => {
+    setLoading(true);
+    try {
+      if (isFollowing) {
+        await unfollowUser(userLogin.id, id);
+        setIsFollowing(false);
+      } else {
+        await followUser(userLogin.id, id);
+        setIsFollowing(true);
+      }
+    } catch (error) {
+      console.error("Lỗi theo dõi:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -174,6 +206,15 @@ export default function Profile() {
                   }
                   className="w-full p-2 border rounded-md mb-2"
                   placeholder="City"
+                />
+                <input
+                  type="text"
+                  value={formData.website}
+                  onChange={(e) =>
+                    setFormData({ ...formData, website: e.target.value })
+                  }
+                  className="w-full p-2 border rounded-md mb-2"
+                  placeholder="Website"
                 />
 
                 <div className="flex gap-4 mb-4">
@@ -243,7 +284,9 @@ export default function Profile() {
               className="w-24 h-24 rounded-full border-4 border-white -mt-12"
               alt="Avatar"
             />
-            <h2 className="text-lg font-bold capitalize">{userProfile?.name}</h2>
+            <h2 className="text-lg font-bold capitalize">
+              {userProfile?.name}
+            </h2>
             <ProfileButton id={userProfile?.id} />
           </div>
 
@@ -251,8 +294,55 @@ export default function Profile() {
 
           <div className="p-4">
             <p className="flex items-center gap-2 text-sm text-gray-700">
-              <PiCity className="w-4 h-4 text-gray-500" />{" "}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="size-6"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z"
+                />
+              </svg>{" "}
               {userProfile?.city || "No city provided"}
+            </p>
+
+            <p className="flex items-center gap-2 text-sm text-gray-700 mt-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="size-6"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418"
+                />
+              </svg>
+
+              {userProfile?.website ? (
+                <a
+                  href={
+                    userProfile.website.startsWith("http")
+                      ? userProfile.website
+                      : `https://${userProfile.website}.com`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  {userProfile.website}
+                </a>
+              ) : (
+                "No website provided"
+              )}
             </p>
           </div>
 

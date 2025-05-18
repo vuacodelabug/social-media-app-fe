@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from "react";
 import {
   Card,
   CardHeader,
@@ -6,127 +6,188 @@ import {
   CardFooter,
   Typography,
   Input,
-  Checkbox,
   Button,
-  Select,
-  Option
+  Checkbox,
+  Dialog,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
 } from "@material-tailwind/react";
-
-import { Link } from 'react-router-dom';
-import { useFormik } from "formik";
-import * as Yup from "yup";
+import { Link, useNavigate } from "react-router-dom";
+import * as api from "../utils/api"; // Giả định api có verifyEmail và Register
 
 const Register = () => {
-  let initialValues = {
-    name: "",
+  const navigate = useNavigate();
+
+  const [form, setForm] = useState({
+    username: "",
     email: "",
     password: "",
-    date: "",
-    gender: ""
-  };
-
-  const validationSchema = Yup.object({
-    name: Yup.string()
-      .required("Required")
-      .min(4, "Must be at least 4 characters long")
-      .matches(/^[a-zA-Z]+$/, "Name can only contain letters"),
-    email: Yup.string().email("Invalid email address").required("Required"),
-    password: Yup.string()
-    .required("Required")
-    .min(6, "Must be at least 6 characters long")
-    .matches(/^[a-zA-Z0-9]+$/, "Password must contain only letters and numbers"),  
-    date: Yup.date().required("Required")
+    name: "",
+    city: "",
+    website: "",
   });
 
-  const handleRegister = (e) => {
+  const [errors, setErrors] = useState({});
+  const [enteredCode, setEnteredCode] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [messageColor, setMessageColor] = useState("gray");
+
+  const validate = () => {
+    const err = {};
+    if (!form.username || form.username.length < 3) {
+      err.username = "Username must be at least 3 characters";
+    }
+    if (!form.email || !form.email.includes("@")) {
+      err.email = "Invalid email";
+    }
+    if (!form.password || form.password.length < 6) {
+      err.password = "Password must be at least 6 characters";
+    }
+    if (!form.name || form.name.length < 2) {
+      err.name = "Name is required";
+    }
+    setErrors(err);
+    return Object.keys(err).length === 0;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleStartVerification = async (e) => {
     e.preventDefault();
-    const { name, email, password, date, gender } = formik.values;
-    if (formik.isValid) {
-      alert("Good");
-    } else {
-      alert("Check your input fields");
+    if (!validate()) return;
+
+    try {
+      const res = await api.verifyEmail(form.email);
+      const data = await res.json();
+
+      if (res.status === 200 && data.code) {
+        setVerificationCode(data.code);
+        setIsDialogOpen(true);
+        setMessage("A verification code has been sent to your email.");
+        setMessageColor("blue");
+      } else {
+        setMessage("Failed to send verification email.");
+        setMessageColor("red");
+      }
+    } catch (error) {
+      console.error("Verification error:", error);
+      setMessage("Something went wrong during email verification.");
+      setMessageColor("red");
     }
   };
 
-  const formik = useFormik({ initialValues, validationSchema, handleRegister });
+  const handleVerifyCode = async (e) => {
+    e.preventDefault();
+
+    if (enteredCode === verificationCode) {
+      try {
+        const res = await api.Register(form);
+        const data = await res.json();
+
+        if (res.status === 201) {
+          setMessage("Registration successful! Redirecting to login...");
+          setMessageColor("green");
+          setTimeout(() => {
+            navigate("/login");
+          }, 2000);
+        } else {
+          setMessage(data?.message || "Registration failed.");
+          setMessageColor("red");
+        }
+      } catch (error) {
+        console.error("Registration error:", error);
+        setMessage("Something went wrong during registration.");
+        setMessageColor("red");
+      }
+    } else {
+      setMessage("Invalid verification code.");
+      setMessageColor("red");
+    }
+    setIsDialogOpen(false);
+  };
 
   return (
-    <div className='grid grid-cols-1 justify-items-center items-center h-screen'>
-      <Card className="w-96">
+    <div className="grid grid-cols-1 justify-items-center items-center h-screen bg-gray-50 px-4">
+      <Card className="w-full max-w-md p-4">
         <CardHeader
           variant="gradient"
           color="blue"
-          className="mb-4 grid h-28 place-items-center"
+          className="mb-4 grid h-24 place-items-center"
         >
-          <Typography variant="h3" color="white">
+          <Typography variant="h4" color="white">
             Register
           </Typography>
         </CardHeader>
-        <CardBody className="flex flex-col gap-4">
-          <form onSubmit={handleRegister}>
-            <div className='mb-6'>
-              <Input name="name" type="text" label="Name" size="lg" {...formik.getFieldProps("name")} />
-              {formik.touched.name && formik.errors.name && (
-                <Typography variant="small" color="red">
-                  {formik.errors.name}
-                </Typography>
-              )}
-            </div>
-            <div className='mb-6'>
-              <Input name="email" type="email" label="Email" size="lg" {...formik.getFieldProps("email")} />
-              {formik.touched.email && formik.errors.email && (
-                <Typography variant="small" color="red">
-                  {formik.errors.email}
-                </Typography>
-              )}
-            </div>
-            <div className='mb-6'>
-              <Input name="password" type="password" label="Password" size="lg" {...formik.getFieldProps("password")} />
-              {formik.touched.password && formik.errors.password && (
-                <Typography variant="small" color="red">
-                  {formik.errors.password}
-                </Typography>
-              )}
-            </div>
-            <div className='mb-6'>
-              <Input name="date" type="date" label="Date of Birth" size="lg" {...formik.getFieldProps("date")} />
-              {formik.touched.date && formik.errors.date && (
-                <Typography variant="small" color="red">
-                  {formik.errors.date}
-                </Typography>
-              )}
-            </div>
-            <div className='mb-6'>
-              <Select name="gender" label="Gender" {...formik.getFieldProps("gender")}>
-                <Option value="male">Male</Option>
-                <Option value="female">Female</Option>
-                <Option value="other">Other</Option>
-              </Select>
-              {formik.touched.gender && formik.errors.gender && (
-                <Typography variant="small" color="red">
-                  {formik.errors.gender}
-                </Typography>
-              )}
-            </div>
-            <Button variant="gradient" color="blue" fullWidth type="submit" className="mb-4">
+        <CardBody>
+          <form onSubmit={handleStartVerification} className="flex flex-col gap-4">
+            <Input label="Username" name="username" value={form.username} onChange={handleChange} />
+            {errors.username && <Typography color="red" variant="small">{errors.username}</Typography>}
+
+            <Input label="Email" name="email" type="email" value={form.email} onChange={handleChange} />
+            {errors.email && <Typography color="red" variant="small">{errors.email}</Typography>}
+
+            <Input label="Password" name="password" type="password" value={form.password} onChange={handleChange} />
+            {errors.password && <Typography color="red" variant="small">{errors.password}</Typography>}
+
+            <Input label="Name" name="name" value={form.name} onChange={handleChange} />
+            {errors.name && <Typography color="red" variant="small">{errors.name}</Typography>}
+
+            <Input label="City" name="city" value={form.city} onChange={handleChange} />
+            <Input label="Website" name="website" value={form.website} onChange={handleChange} />
+
+            <Checkbox label="I agree to the terms and conditions" />
+
+            <Button type="submit" fullWidth color="blue">
               Register
             </Button>
           </form>
-          <div className="-ml-2.5">
-            <Checkbox label="Remember Me" />
-          </div>
+
+          {message && (
+            <Typography variant="small" className={`mt-4 text-${messageColor}-500`}>
+              {message}
+            </Typography>
+          )}
         </CardBody>
-        <CardFooter className="pt-0">
-          <div className="mt-6 flex font-roboto text-base justify-center">
+        <CardFooter className="pt-0 text-center">
+          <Typography variant="small" className="text-gray-700">
             Already have an account?
-            <Link to="/login">
-              <p className="ml-1 font-bold font-roboto text-base text-blue-500 text-center">
-                Log in
-              </p>
+            <Link to="/login" className="text-blue-500 font-bold ml-1">
+              Login
             </Link>
-          </div>
+          </Typography>
         </CardFooter>
       </Card>
+
+      {/* Dialog nhập mã xác thực */}
+      <Dialog open={isDialogOpen} handler={() => setIsDialogOpen(false)} size="sm">
+        <DialogHeader>Verify Your Email</DialogHeader>
+        <DialogBody>
+          <form onSubmit={handleVerifyCode} className="flex flex-col gap-4">
+            <Input
+              label="Enter Verification Code"
+              name="verificationCode"
+              type="text"
+              value={enteredCode}
+              onChange={(e) => setEnteredCode(e.target.value)}
+              required
+            />
+            <Button type="submit" fullWidth color="green">
+              Verify & Register
+            </Button>
+          </form>
+        </DialogBody>
+        <DialogFooter>
+          <Button color="red" onClick={() => setIsDialogOpen(false)} variant="text">
+            Cancel
+          </Button>
+        </DialogFooter>
+      </Dialog>
     </div>
   );
 };
