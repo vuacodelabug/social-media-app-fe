@@ -110,6 +110,23 @@ const PostsSection = ({ isUserProfile = false, idUser = 0 }) => {
     }
   };
 
+  // Hàm xóa bài viết
+  const handleDeletePost = async (postId) => {
+    try {
+      // xác nhận xóa
+      const confirmDelete = window.confirm("Bạn có chắc chắn muốn xóa bài viết này không?");
+      if (!confirmDelete) return;
+
+      // gọi api xóa bài viết
+      await api.deletePost(postId);
+      refreshPosts();
+      setOpenMenuPostId(null); 
+
+    } catch (error) {
+      console.error("Lỗi khi xóa bài viết:", error);
+    }
+  }
+
   // mở menu bài viết
   const togglePostMenu = (postId) => {
     setOpenMenuPostId(openMenuPostId === postId ? null : postId);
@@ -221,10 +238,7 @@ const PostsSection = ({ isUserProfile = false, idUser = 0 }) => {
                   {isOwnPost && openMenuPostId === post.id && (
                     <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow-md z-10">
                       <button
-                        onClick={() => {
-                          // deletePost(post.id);
-                          refreshPosts();
-                        }}
+                        onClick={() => handleDeletePost(post.id)}
                         className="block w-full text-left px-4 py-2 text-sm hover:bg-red-100 text-red-600"
                       >
                         Xóa bài viết

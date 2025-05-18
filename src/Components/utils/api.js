@@ -73,6 +73,13 @@ export function postCreatePost(description, img = null) {
   });
 }
 
+// xoa bài viết
+export function deletePost(postId) {
+  return axios.delete(`${API_ROOT}/api/posts/${postId}`, {
+    withCredentials: true,
+  });
+}
+
 // upload ảnh
 export function uploadImage(file, field) {
   if (!file) return null;
@@ -95,7 +102,9 @@ export function getComments(postId) {
   });
 }
 export const postAddComment = (data) => axios.post(`${API_ROOT}/api/comments`, data);
-export const deleteComment = (id) => axios.delete(`${API_ROOT}/api/comments/${id}`);
+export const deleteComment = (id) => axios.delete(`${API_ROOT}/api/comments/${id}`,{
+  withCredentials: true,
+});
 export const getLikes = (postId) => axios.get(`${API_ROOT}/api/likes`,{
   params: { postId },
 });
